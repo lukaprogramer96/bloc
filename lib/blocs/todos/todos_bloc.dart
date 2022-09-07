@@ -16,12 +16,48 @@ class TodosBloc extends Bloc<TodosEvent, TodosState> {
   }
 
   void _onLoadTodos(LoadTodos event, Emitter<TodosState> emit) {
-    emit(TodosLoaded(todos: event.todos));
+    emit(
+      TodosLoaded(todos: event.todos),
+    );
   }
 
-  void _onAddTodo(AddTodo event, Emitter<TodosState> emit) {}
+  void _onAddTodo(AddTodo event, Emitter<TodosState> emit) {
+    final state = this.state;
+    int lastId = -1;
+    if (state is TodosLoaded) {
+      for (var i in state.todos) {
+        if (i.id > lastId) {
+          lastId = i.id;
+        }
+      }
+      event.todo.id = lastId + 1;
+      emit(
+        TodosLoaded(
+          todos: List.from(state.todos)..add(event.todo),
+        ),
+      );
+    }
+  }
 
-  void _onUpdateTodo(UpdateTodo event, Emitter<TodosState> emit) {}
+  void _onUpdateTodo(UpdateTodo event, Emitter<TodosState> emit) {
+    final state = this.state;
+    if (state is TodosLoaded) {
+      List<Todo> todos = (state.todos.map((todo) {
+        return todo.id == event.todo.id ? event.todo : todo;
+      })).toList();
+      emit(TodosLoaded(todos: todos));
+    }
+  }
 
-  void _onDeleteTodo(DeleteTodo event, Emitter<TodosState> emit) {}
+  void _onDeleteTodo(DeleteTodo event, Emitter<TodosState> emit) {
+    final state = this.state;
+    if (state is TodosLoaded) {
+      List<Todo> todos = state.todos.where((todo) {
+        return todo.id != event.todo.id;
+      }).toList();
+      emit(
+        TodosLoaded(todos: todos),
+      );
+    }
+  }
 }
